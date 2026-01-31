@@ -1,1 +1,4 @@
 rootProject.name = 'log-analyzer'
+
+include 'core'
+include 'clients'

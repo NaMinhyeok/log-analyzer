@@ -1,4 +1,4 @@
-package io.github.naminhyeok.core;
+package io.github.naminhyeok;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: log-analyzer-api
+
+  profiles:
+    active: local
+---
+spring.config.activate.on-profile: local
+
+---
+spring.config.activate.on-profile: dev

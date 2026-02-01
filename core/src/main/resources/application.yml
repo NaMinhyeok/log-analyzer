@@ -8,6 +8,9 @@ spring:
   profiles:
     active: local
 
+  config:
+    import: client-ipinfo.yml
+
 springdoc:
   api-docs:
     path: /v3/api-docs

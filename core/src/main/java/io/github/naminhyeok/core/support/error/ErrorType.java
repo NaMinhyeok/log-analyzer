@@ -15,6 +15,8 @@ public enum ErrorType {
         LogLevel.INFO),
     FILE_READ_ERROR(HttpStatus.UNPROCESSABLE_CONTENT, ErrorCode.E1001, "파일을 처리할 수 없습니다.",
         LogLevel.WARN),
+    FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, ErrorCode.E1002, "파일 크기가 제한을 초과했습니다.",
+        LogLevel.INFO),
 
     // 분석 관련 에러 (2000번대)
     ANALYSIS_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E2000, "분석 결과를 찾을 수 없습니다.",

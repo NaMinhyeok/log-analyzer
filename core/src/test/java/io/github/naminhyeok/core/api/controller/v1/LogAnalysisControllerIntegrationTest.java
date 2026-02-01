@@ -1,0 +1,79 @@
+package io.github.naminhyeok.core.api.controller.v1;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import java.nio.charset.StandardCharsets;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureRestTestClient
+@ActiveProfiles("test")
+class LogAnalysisControllerIntegrationTest {
+
+    @Autowired
+    private RestTestClient restTestClient;
+
+    @Test
+    void 파일_크기가_제한을_초과하면_413_에러를_반환한다() {
+        // given
+        byte[] largeContent = new byte[2 * 1024];
+        ByteArrayResource fileResource = new ByteArrayResource(largeContent) {
+            @Override
+            public String getFilename() {
+                return "large-test.csv";
+            }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", fileResource);
+
+        // when & then
+        restTestClient.post()
+            .uri("/api/v1/logs/analyze")
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(body)
+            .exchange()
+            .expectStatus().isEqualTo(413)
+            .expectBody()
+            .jsonPath("$.result").isEqualTo("ERROR")
+            .jsonPath("$.error.code").isEqualTo("E1002")
+            .jsonPath("$.error.message").isEqualTo("파일 크기가 제한을 초과했습니다.");
+    }
+
+    @Test
+    void 정상_크기_파일은_업로드할_수_있다() {
+        // given
+        String csv = """
+            header1,header2,header3,header4,header5,header6,header7,header8,header9,header10,header11,header12
+            "1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/api/test,Mozilla/5.0,200,HTTP/1.1,100,200,50,TLSv1.2,/api/test
+            """;
+        ByteArrayResource fileResource = new ByteArrayResource(csv.getBytes(StandardCharsets.UTF_8)) {
+            @Override
+            public String getFilename() {
+                return "test.csv";
+            }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", fileResource);
+
+        // when & then
+        restTestClient.post()
+            .uri("/api/v1/logs/analyze")
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(body)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.result").isEqualTo("SUCCESS")
+            .jsonPath("$.data.analysisId").exists();
+    }
+}

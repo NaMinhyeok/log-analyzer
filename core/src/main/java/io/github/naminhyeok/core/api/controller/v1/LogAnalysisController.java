@@ -4,6 +4,7 @@ import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResponse;
 import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResultResponse;
 import io.github.naminhyeok.core.application.LogAnalysisService;
 import io.github.naminhyeok.core.domain.LogAnalysis;
+import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.support.response.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class LogAnalysisController {
         @PathVariable Long analysisId,
         @RequestParam(defaultValue = "10") int topN
     ) {
-        LogAnalysis logAnalysis = logAnalysisService.getAnalysis(analysisId);
-        return ResponseEntity.ok(ApiResponse.success(LogAnalysisResultResponse.from(logAnalysis, topN)));
+        LogAnalysisResult result = logAnalysisService.getAnalysisResult(analysisId, topN);
+        return ResponseEntity.ok(ApiResponse.success(LogAnalysisResultResponse.from(result, topN)));
     }
 }

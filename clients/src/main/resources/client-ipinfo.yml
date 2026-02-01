@@ -1,0 +1,3 @@
+ipinfo:
+  base-url: https://ipinfo.io
+  token: ${IPINFO_TOKEN:}

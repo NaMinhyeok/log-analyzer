@@ -1,7 +1,11 @@
 package io.github.naminhyeok.core.application;
 
+import io.github.naminhyeok.clients.ipinfo.IpInfo;
+import io.github.naminhyeok.clients.ipinfo.IpInfoClient;
 import io.github.naminhyeok.core.domain.AccessLog;
 import io.github.naminhyeok.core.domain.LogAnalysis;
+import io.github.naminhyeok.core.domain.LogAnalysisRepository;
+import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.infrastructure.persistence.InMemoryLogAnalysisRepository;
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
@@ -24,7 +28,16 @@ class LogAnalysisServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new LogAnalysisService(new CsvParser(), new InMemoryLogAnalysisRepository());
+        LogAnalysisRepository repository = new InMemoryLogAnalysisRepository();
+        CsvParser csvParser = new CsvParser();
+        IpInfoClient stubIpInfoClient = ip -> IpInfo.unknown(ip);
+
+        LogAnalyzer logAnalyzer = new LogAnalyzer(csvParser, repository);
+        LogAnalysisFinder logAnalysisFinder = new LogAnalysisFinder(repository);
+        IpInfoReader ipInfoReader = new IpInfoReader(stubIpInfoClient);
+        LogAnalysisEnricher logAnalysisEnricher = new LogAnalysisEnricher(ipInfoReader);
+
+        service = new LogAnalysisService(logAnalyzer, logAnalysisFinder, logAnalysisEnricher);
     }
 
     @Test
@@ -137,6 +150,24 @@ class LogAnalysisServiceTest {
                 CoreException coreException = (CoreException) e;
                 then(coreException.getErrorType()).isEqualTo(ErrorType.ANALYSIS_NOT_FOUND);
             });
+    }
+
+    @Test
+    void IP_정보가_포함된_분석_결과를_조회할_수_있다() {
+        // given
+        String csv = """
+            header1,header2,header3,header4,header5,header6,header7,header8,header9,header10,header11,header12
+            "1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/api/test,Mozilla/5.0,200,HTTP/1.1,100,200,50,TLSv1.2,/api/test
+            """;
+        MultipartFile file = toMultipartFile(csv);
+        LogAnalysis savedLogAnalysis = service.analyze(file);
+
+        // when
+        LogAnalysisResult result = service.getAnalysisResult(savedLogAnalysis.getId(), 10);
+
+        // then
+        then(result.logAnalysis().getId()).isEqualTo(savedLogAnalysis.getId());
+        then(result.enrichedIps()).isNotNull();
     }
 
     private MultipartFile toMultipartFile(String content) {

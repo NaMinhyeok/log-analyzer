@@ -1,5 +1,7 @@
 package io.github.naminhyeok.core.application;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.naminhyeok.clients.ipinfo.IpInfo;
 import io.github.naminhyeok.core.domain.AccessLog;
 import io.github.naminhyeok.core.domain.LogAnalysis;
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,7 +26,11 @@ class LogAnalysisEnricherTest {
     @BeforeEach
     void setUp() {
         fakeIpInfoClient = new FakeIpInfoClient();
-        IpInfoReader ipInfoReader = new IpInfoReader(fakeIpInfoClient);
+        Cache<String, IpInfo> cache = Caffeine.newBuilder()
+            .maximumSize(100)
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .build();
+        IpInfoReader ipInfoReader = new IpInfoReader(cache, fakeIpInfoClient);
         logAnalysisEnricher = new LogAnalysisEnricher(ipInfoReader);
     }
 

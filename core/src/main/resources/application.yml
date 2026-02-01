@@ -11,6 +11,11 @@ spring:
   config:
     import: client-ipinfo.yml
 
+ipinfo:
+  cache:
+    ttl-minutes: 60
+    max-size: 1000
+
 springdoc:
   api-docs:
     path: /v3/api-docs

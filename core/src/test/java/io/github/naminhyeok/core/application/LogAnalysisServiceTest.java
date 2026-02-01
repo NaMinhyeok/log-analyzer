@@ -1,5 +1,7 @@
 package io.github.naminhyeok.core.application;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.naminhyeok.clients.ipinfo.IpInfo;
 import io.github.naminhyeok.clients.ipinfo.IpInfoClient;
 import io.github.naminhyeok.core.domain.AccessLog;
@@ -18,6 +20,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenThrownBy;
@@ -31,10 +34,14 @@ class LogAnalysisServiceTest {
         LogAnalysisRepository repository = new InMemoryLogAnalysisRepository();
         CsvParser csvParser = new CsvParser();
         IpInfoClient stubIpInfoClient = ip -> IpInfo.unknown(ip);
+        Cache<String, IpInfo> cache = Caffeine.newBuilder()
+            .maximumSize(100)
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .build();
 
         LogAnalyzer logAnalyzer = new LogAnalyzer(csvParser, repository);
         LogAnalysisFinder logAnalysisFinder = new LogAnalysisFinder(repository);
-        IpInfoReader ipInfoReader = new IpInfoReader(stubIpInfoClient);
+        IpInfoReader ipInfoReader = new IpInfoReader(cache, stubIpInfoClient);
         LogAnalysisEnricher logAnalysisEnricher = new LogAnalysisEnricher(ipInfoReader);
 
         service = new LogAnalysisService(logAnalyzer, logAnalysisFinder, logAnalysisEnricher);

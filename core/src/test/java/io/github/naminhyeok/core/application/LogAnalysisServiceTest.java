@@ -3,6 +3,8 @@ package io.github.naminhyeok.core.application;
 import io.github.naminhyeok.core.domain.AccessLog;
 import io.github.naminhyeok.core.domain.LogAnalysis;
 import io.github.naminhyeok.core.infrastructure.persistence.InMemoryLogAnalysisRepository;
+import io.github.naminhyeok.core.support.error.CoreException;
+import io.github.naminhyeok.core.support.error.ErrorType;
 import io.github.naminhyeok.core.support.parser.CsvParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.BDDAssertions.thenThrownBy;
 
 class LogAnalysisServiceTest {
 
@@ -102,6 +105,38 @@ class LogAnalysisServiceTest {
         then(result.getId()).isNotNull();
         then(result.getAccessLogs()).isEmpty();
         then(result.getErrors()).isEmpty();
+    }
+
+    @Test
+    void 분석_결과를_ID로_조회할_수_있다() {
+        // given
+        String csv = """
+            header1,header2,header3,header4,header5,header6,header7,header8,header9,header10,header11,header12
+            "1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/api/test,Mozilla/5.0,200,HTTP/1.1,100,200,50,TLSv1.2,/api/test
+            """;
+        MultipartFile file = toMultipartFile(csv);
+        LogAnalysis savedLogAnalysis = service.analyze(file);
+
+        // when
+        LogAnalysis foundLogAnalysis = service.getAnalysis(savedLogAnalysis.getId());
+
+        // then
+        then(foundLogAnalysis.getId()).isEqualTo(savedLogAnalysis.getId());
+        then(foundLogAnalysis.getAccessLogs()).hasSize(1);
+    }
+
+    @Test
+    void 존재하지_않는_분석_결과를_조회하면_예외가_발생한다() {
+        // given
+        Long nonExistentId = 999L;
+
+        // when & then
+        thenThrownBy(() -> service.getAnalysis(nonExistentId))
+            .isInstanceOf(CoreException.class)
+            .satisfies(e -> {
+                CoreException coreException = (CoreException) e;
+                then(coreException.getErrorType()).isEqualTo(ErrorType.ANALYSIS_NOT_FOUND);
+            });
     }
 
     private MultipartFile toMultipartFile(String content) {

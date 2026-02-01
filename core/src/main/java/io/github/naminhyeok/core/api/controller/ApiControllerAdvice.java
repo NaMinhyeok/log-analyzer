@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class ApiControllerAdvice {
@@ -22,6 +23,15 @@ public class ApiControllerAdvice {
             default -> log.info("CoreException : {}", e.getMessage(), e);
         }
         return new ResponseEntity<>(ApiResponse.error(e.getErrorType(), e.getData()), e.getErrorType().getStatus());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<?>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+        log.info("MaxUploadSizeExceededException : {}", e.getMessage());
+        return new ResponseEntity<>(
+            ApiResponse.error(ErrorType.FILE_SIZE_EXCEEDED),
+            ErrorType.FILE_SIZE_EXCEEDED.getStatus()
+        );
     }
 
     @ExceptionHandler(Exception.class)

@@ -14,7 +14,11 @@ public enum ErrorType {
     PARSE_INVALID_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E1000, "요청 데이터 형식이 올바르지 않습니다.",
         LogLevel.INFO),
     FILE_READ_ERROR(HttpStatus.UNPROCESSABLE_CONTENT, ErrorCode.E1001, "파일을 처리할 수 없습니다.",
-        LogLevel.WARN);
+        LogLevel.WARN),
+
+    // 분석 관련 에러 (2000번대)
+    ANALYSIS_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E2000, "분석 결과를 찾을 수 없습니다.",
+        LogLevel.INFO);
 
     private final HttpStatus status;
 

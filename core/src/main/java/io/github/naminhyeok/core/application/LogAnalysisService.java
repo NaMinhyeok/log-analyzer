@@ -24,6 +24,11 @@ public class LogAnalysisService {
     private final CsvParser csvParser;
     private final LogAnalysisRepository logAnalysisRepository;
 
+    public LogAnalysis getAnalysis(Long analysisId) {
+        return logAnalysisRepository.findById(analysisId)
+            .orElseThrow(() -> new CoreException(ErrorType.ANALYSIS_NOT_FOUND));
+    }
+
     public LogAnalysis analyze(MultipartFile file) {
         List<AccessLog> parsedAccessLogs = new ArrayList<>();
         List<ParseError> collectedErrors = new ArrayList<>();

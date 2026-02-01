@@ -5,6 +5,7 @@ import io.github.naminhyeok.core.domain.LogAnalysisRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -22,6 +23,11 @@ public class InMemoryLogAnalysisRepository implements LogAnalysisRepository {
         }
         store.put(savedLogAnalysis.getId(), savedLogAnalysis);
         return savedLogAnalysis;
+    }
+
+    @Override
+    public Optional<LogAnalysis> findById(Long id) {
+        return Optional.ofNullable(store.get(id));
     }
 
 }

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -30,7 +31,8 @@ class CsvParserTest {
         InputStream inputStream = toInputStream(csv);
 
         // when
-        List<CsvRow> rows = parser.parse(inputStream).toList();
+        List<CsvRow> rows = new ArrayList<>();
+        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(1)
@@ -47,7 +49,8 @@ class CsvParserTest {
         InputStream inputStream = toInputStream(csv);
 
         // when
-        List<CsvRow> rows = parser.parse(inputStream).toList();
+        List<CsvRow> rows = new ArrayList<>();
+        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).isEmpty();
@@ -63,7 +66,8 @@ class CsvParserTest {
         InputStream inputStream = toInputStream(csv);
 
         // when
-        List<CsvRow> rows = parser.parse(inputStream).toList();
+        List<CsvRow> rows = new ArrayList<>();
+        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(1)
@@ -76,14 +80,15 @@ class CsvParserTest {
         // given
         String csv = """
             header1,header2
-            
+
             value1,value2
-            
+
             """;
         InputStream inputStream = toInputStream(csv);
 
         // when
-        List<CsvRow> rows = parser.parse(inputStream).toList();
+        List<CsvRow> rows = new ArrayList<>();
+        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(1);
@@ -101,7 +106,8 @@ class CsvParserTest {
         InputStream inputStream = toInputStream(csv);
 
         // when
-        List<CsvRow> rows = parser.parse(inputStream).toList();
+        List<CsvRow> rows = new ArrayList<>();
+        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(3)

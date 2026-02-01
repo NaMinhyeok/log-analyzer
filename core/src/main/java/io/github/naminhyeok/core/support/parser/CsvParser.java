@@ -1,23 +1,34 @@
 package io.github.naminhyeok.core.support.parser;
 
+import io.github.naminhyeok.core.support.error.CoreException;
+import io.github.naminhyeok.core.support.error.ErrorType;
+import org.springframework.stereotype.Component;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+@Component
 public class CsvParser {
 
-    public Stream<CsvRow> parse(InputStream inputStream) {
-        BufferedReader reader = new BufferedReader(
-            new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+    public void parse(InputStream inputStream, Consumer<Stream<CsvRow>> consumer) {
+        try (BufferedReader reader = new BufferedReader(
+            new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
 
-        return reader.lines()
-            .skip(1)
-            .filter(line -> !line.trim().isEmpty())
-            .map(this::parseLine);
+            Stream<CsvRow> stream = reader.lines()
+                .skip(1)
+                .filter(line -> !line.trim().isEmpty())
+                .map(this::parseLine);
+
+            consumer.accept(stream);
+        } catch (Exception e) {
+            throw new CoreException(ErrorType.FILE_READ_ERROR);
+        }
     }
 
     private CsvRow parseLine(String line) {

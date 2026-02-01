@@ -12,7 +12,9 @@ public enum ErrorType {
 
     // 파싱 관련 에러 (1000번대)
     PARSE_INVALID_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E1000, "요청 데이터 형식이 올바르지 않습니다.",
-        LogLevel.INFO);
+        LogLevel.INFO),
+    FILE_READ_ERROR(HttpStatus.UNPROCESSABLE_CONTENT, ErrorCode.E1001, "파일을 처리할 수 없습니다.",
+        LogLevel.WARN);
 
     private final HttpStatus status;
 

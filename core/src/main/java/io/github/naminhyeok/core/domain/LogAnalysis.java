@@ -44,6 +44,10 @@ public class LogAnalysis {
         return getTopItems(AccessLog::clientIp, limit);
     }
 
+    public LogAnalysisStatistics calculateStatistics(int topN) {
+        return LogAnalysisStatistics.from(this, topN);
+    }
+
     private List<RankedItem> getTopItems(Function<AccessLog, String> keyExtractor, int limit) {
         if (accessLogs.isEmpty()) {
             return List.of();

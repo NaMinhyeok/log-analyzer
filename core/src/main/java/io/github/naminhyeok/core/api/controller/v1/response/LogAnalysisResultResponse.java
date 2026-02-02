@@ -14,8 +14,11 @@ public record LogAnalysisResultResponse(
     List<RankedItemResponse> topPaths,
     List<RankedItemResponse> topStatusCodes,
     List<RankedIpResponse> topClientIps,
-    int parseErrorCount
+    int parseErrorCount,
+    List<ParseErrorResponse> parseErrorSamples
 ) {
+
+    private static final int MAX_ERROR_SAMPLES = 10;
 
     public static LogAnalysisResultResponse from(LogAnalysisResult result, int topN) {
         LogAnalysis analysis = result.logAnalysis();
@@ -25,6 +28,11 @@ public record LogAnalysisResultResponse(
             .map(rankedItem -> RankedIpResponse.from(rankedItem, result.getIpInfo(rankedItem.value())))
             .toList();
 
+        List<ParseErrorResponse> errorSamples = analysis.getErrors().stream()
+            .limit(MAX_ERROR_SAMPLES)
+            .map(ParseErrorResponse::from)
+            .toList();
+
         return new LogAnalysisResultResponse(
             analysis.getId(),
             analysis.getAnalyzedAt(),
@@ -32,7 +40,8 @@ public record LogAnalysisResultResponse(
             statistics.topPaths().stream().map(RankedItemResponse::from).toList(),
             statistics.topStatusCodes().stream().map(RankedItemResponse::from).toList(),
             topClientIpsWithDetail,
-            analysis.getErrors().size()
+            analysis.getErrors().size(),
+            errorSamples
         );
     }
 }

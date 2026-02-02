@@ -5,11 +5,13 @@ import io.github.naminhyeok.core.domain.LogAnalysis;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.domain.LogAnalysisStatistics;
 import io.github.naminhyeok.core.domain.RankedItem;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class LogAnalysisEnricher {
 
@@ -20,8 +22,19 @@ public class LogAnalysisEnricher {
     }
 
     public LogAnalysisResult enrich(LogAnalysis logAnalysis, int topN) {
+        log.info("IP 정보 조회 시작: analysisId={}, topN={}", logAnalysis.getId(), topN);
+        long startTime = System.currentTimeMillis();
+
         List<String> topClientIps = extractTopClientIps(logAnalysis, topN);
         Map<String, IpInfo> enrichedIps = ipInfoReader.readAll(topClientIps);
+
+        long unknownCount = enrichedIps.values().stream()
+            .filter(IpInfo::isUnknown)
+            .count();
+        long elapsedTime = System.currentTimeMillis() - startTime;
+
+        log.info("IP 정보 조회 완료: totalIps={}, unknownIps={}, elapsedTime={}ms",
+            enrichedIps.size(), unknownCount, elapsedTime);
 
         return LogAnalysisResult.of(logAnalysis, enrichedIps);
     }

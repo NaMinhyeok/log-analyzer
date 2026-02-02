@@ -1,3 +1,5 @@
 ipinfo:
   base-url: https://ipinfo.io
   token: ${IPINFO_TOKEN:}
+  connect-timeout-ms: 3000
+  read-timeout-ms: 3000

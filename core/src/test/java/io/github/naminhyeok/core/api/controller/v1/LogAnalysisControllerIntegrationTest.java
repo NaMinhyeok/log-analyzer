@@ -18,13 +18,16 @@ import java.nio.charset.StandardCharsets;
 @ActiveProfiles("test")
 class LogAnalysisControllerIntegrationTest {
 
+    // application-test.yml의 max-file-size와 동기화 (1KB = 1024 bytes)
+    private static final int TEST_MAX_FILE_SIZE_BYTES = 1024;
+
     @Autowired
     private RestTestClient restTestClient;
 
     @Test
     void 파일_크기가_제한을_초과하면_413_에러를_반환한다() {
-        // given
-        byte[] largeContent = new byte[2 * 1024];
+        // given - 제한(1KB)을 1바이트 초과하는 파일 생성
+        byte[] largeContent = new byte[TEST_MAX_FILE_SIZE_BYTES + 1];
         ByteArrayResource fileResource = new ByteArrayResource(largeContent) {
             @Override
             public String getFilename() {

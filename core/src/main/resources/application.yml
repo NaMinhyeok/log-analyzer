@@ -20,6 +20,10 @@ ipinfo:
   cache:
     ttl-minutes: 60
     max-size: 1000
+  retry:
+    max-attempts: 3
+    wait-duration-ms: 500
+    exponential-backoff-multiplier: 2.0
 
 springdoc:
   api-docs:

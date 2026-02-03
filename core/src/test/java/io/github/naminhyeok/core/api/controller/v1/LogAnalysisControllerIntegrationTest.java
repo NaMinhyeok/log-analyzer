@@ -41,7 +41,7 @@ class LogAnalysisControllerIntegrationTest {
 
         // when & then
         restTestClient.post()
-            .uri("/api/v1/logs/analyze")
+            .uri("/api/logs/v1/analyze")
             .contentType(MediaType.MULTIPART_FORM_DATA)
             .body(body)
             .exchange()
@@ -71,7 +71,7 @@ class LogAnalysisControllerIntegrationTest {
 
         // when & then
         restTestClient.post()
-            .uri("/api/v1/logs/analyze")
+            .uri("/api/logs/v1/analyze")
             .contentType(MediaType.MULTIPART_FORM_DATA)
             .body(body)
             .exchange()
@@ -99,7 +99,7 @@ class LogAnalysisControllerIntegrationTest {
         body.add("file", fileResource);
 
         byte[] responseBody = restTestClient.post()
-            .uri("/api/v1/logs/analyze")
+            .uri("/api/logs/v1/analyze")
             .contentType(MediaType.MULTIPART_FORM_DATA)
             .body(body)
             .exchange()
@@ -112,7 +112,7 @@ class LogAnalysisControllerIntegrationTest {
 
         // when & then - topN=0으로 조회
         restTestClient.get()
-            .uri("/api/v1/logs/analysis/{analysisId}?topN=0", analysisId)
+            .uri("/api/logs/v1/analysis/{analysisId}?topN=0", analysisId)
             .exchange()
             .expectStatus().isBadRequest()
             .expectBody()

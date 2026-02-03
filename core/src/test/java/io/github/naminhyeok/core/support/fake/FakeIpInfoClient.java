@@ -5,13 +5,16 @@ import io.github.naminhyeok.clients.ipinfo.IpInfoClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class FakeIpInfoClient implements IpInfoClient {
 
     private final Map<String, IpInfo> ipInfoMap = new HashMap<>();
     private final List<String> calledIps = new ArrayList<>();
+    private final Set<String> nullResponseIps = new HashSet<>();
     private RuntimeException exceptionToThrow = null;
     private int failCount = 0;
 
@@ -31,6 +34,10 @@ public class FakeIpInfoClient implements IpInfoClient {
         // 항상 예외 발생
         if (exceptionToThrow != null && failCount == 0) {
             throw exceptionToThrow;
+        }
+
+        if (nullResponseIps.contains(ip)) {
+            return null;
         }
 
         return ipInfoMap.getOrDefault(ip, IpInfo.unknown(ip));
@@ -68,10 +75,16 @@ public class FakeIpInfoClient implements IpInfoClient {
         return this;
     }
 
+    public FakeIpInfoClient withNullResponse(String ip) {
+        nullResponseIps.add(ip);
+        return this;
+    }
+
     public void reset() {
         calledIps.clear();
         exceptionToThrow = null;
         failCount = 0;
         ipInfoMap.clear();
+        nullResponseIps.clear();
     }
 }

@@ -150,4 +150,18 @@ class IpInfoReaderTest {
         then(fakeIpInfoClient.getCallCount("1.1.1.1")).isEqualTo(1);
         then(fakeIpInfoClient.getTotalCallCount()).isEqualTo(2);
     }
+
+    @Test
+    void IpInfoClient가_null을_반환하면_unknown을_반환한다() {
+        // given
+        String ip = "8.8.8.8";
+        fakeIpInfoClient.withNullResponse(ip);
+
+        // when
+        IpInfo result = ipInfoReader.read(ip);
+
+        // then
+        then(result.isUnknown()).isTrue();
+        then(result.ip()).isEqualTo(ip);
+    }
 }

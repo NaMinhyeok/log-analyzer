@@ -8,6 +8,7 @@ import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
 import io.github.naminhyeok.core.support.parser.CsvParser;
 import io.github.naminhyeok.core.support.parser.CsvRow;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @Component
 public class LogAnalyzer {
 
@@ -28,6 +30,9 @@ public class LogAnalyzer {
     }
 
     public LogAnalysis analyze(MultipartFile file) {
+        log.info("로그 분석 시작: fileName={}, size={} bytes", file.getOriginalFilename(), file.getSize());
+        long startTime = System.currentTimeMillis();
+
         List<AccessLog> parsedAccessLogs = new ArrayList<>();
         List<ParseError> collectedErrors = new ArrayList<>();
         AtomicInteger lineNumber = new AtomicInteger(1);
@@ -49,7 +54,17 @@ public class LogAnalyzer {
         }
 
         LogAnalysis logAnalysis = new LogAnalysis(parsedAccessLogs, collectedErrors);
-        return logAnalysisRepository.save(logAnalysis);
+        LogAnalysis savedLogAnalysis = logAnalysisRepository.save(logAnalysis);
+
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        log.info("로그 분석 완료: analysisId={}, totalRequests={}, parseErrors={}, elapsedTime={}ms",
+            savedLogAnalysis.getId(), parsedAccessLogs.size(), collectedErrors.size(), elapsedTime);
+
+        if (!collectedErrors.isEmpty()) {
+            log.warn("파싱 오류 발생: {} 건", collectedErrors.size());
+        }
+
+        return savedLogAnalysis;
     }
 
     private String toRawLine(CsvRow row) {

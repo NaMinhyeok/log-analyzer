@@ -1,5 +1,6 @@
 package io.github.naminhyeok.core.api.controller.v1;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -75,5 +76,45 @@ class LogAnalysisControllerIntegrationTest {
             .expectBody()
             .jsonPath("$.result").isEqualTo("SUCCESS")
             .jsonPath("$.data.analysisId").exists();
+    }
+
+    @Test
+    void topN이_1보다_작으면_400_에러를_반환한다() {
+        // given - 먼저 분석 결과 생성
+        String csv = """
+            header1,header2,header3,header4,header5,header6,header7,header8,header9,header10,header11,header12
+            "1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/api/test,Mozilla/5.0,200,HTTP/1.1,100,200,50,TLSv1.2,/api/test
+            """;
+        ByteArrayResource fileResource = new ByteArrayResource(csv.getBytes(StandardCharsets.UTF_8)) {
+            @Override
+            public String getFilename() {
+                return "test.csv";
+            }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", fileResource);
+
+        byte[] responseBody = restTestClient.post()
+            .uri("/api/v1/logs/analyze")
+            .contentType(MediaType.MULTIPART_FORM_DATA)
+            .body(body)
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .returnResult()
+            .getResponseBody();
+
+        Integer analysisId = JsonPath.read(new String(responseBody, StandardCharsets.UTF_8), "$.data.analysisId");
+
+        // when & then - topN=0으로 조회
+        restTestClient.get()
+            .uri("/api/v1/logs/analysis/{analysisId}?topN=0", analysisId)
+            .exchange()
+            .expectStatus().isBadRequest()
+            .expectBody()
+            .jsonPath("$.result").isEqualTo("ERROR")
+            .jsonPath("$.error.code").isEqualTo("E400")
+            .jsonPath("$.error.message").isEqualTo("요청이 올바르지 않습니다.");
     }
 }

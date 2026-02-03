@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorType {
 
+    INVALID_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E400, "요청이 올바르지 않습니다.",
+        LogLevel.INFO),
     DEFAULT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "An unexpected error has occurred.",
         LogLevel.ERROR),
 

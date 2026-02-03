@@ -5,6 +5,8 @@ import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResultRes
 import io.github.naminhyeok.core.application.LogAnalysisService;
 import io.github.naminhyeok.core.domain.LogAnalysis;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
+import io.github.naminhyeok.core.support.error.CoreException;
+import io.github.naminhyeok.core.support.error.ErrorType;
 import io.github.naminhyeok.core.support.response.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +42,9 @@ public class LogAnalysisController {
         @PathVariable Long analysisId,
         @RequestParam(defaultValue = "10") int topN
     ) {
+        if (topN < 1) {
+            throw new CoreException(ErrorType.INVALID_REQUEST, "topN은 1 이상이어야 합니다.");
+        }
         LogAnalysisResult result = logAnalysisService.getAnalysisResult(analysisId, topN);
         return ResponseEntity.ok(ApiResponse.success(LogAnalysisResultResponse.from(result, topN)));
     }

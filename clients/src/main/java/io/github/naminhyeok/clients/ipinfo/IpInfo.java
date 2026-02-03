@@ -8,11 +8,16 @@ public record IpInfo(
     String org
 ) {
 
+    private static final String UNKNOWN_VALUE = "UNKNOWN";
+
     public static IpInfo unknown(String ip) {
-        return new IpInfo(ip, null, null, null, null);
+        return new IpInfo(ip, UNKNOWN_VALUE, UNKNOWN_VALUE, UNKNOWN_VALUE, UNKNOWN_VALUE);
     }
 
     public boolean isUnknown() {
-        return country == null && region == null && city == null && org == null;
+        return UNKNOWN_VALUE.equals(country)
+            && UNKNOWN_VALUE.equals(region)
+            && UNKNOWN_VALUE.equals(city)
+            && UNKNOWN_VALUE.equals(org);
     }
 }

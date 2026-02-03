@@ -47,7 +47,7 @@ class IpInfoTest {
                 IpInfo::city,
                 IpInfo::org
             )
-            .containsExactly(ip, null, null, null, null);
+            .containsExactly(ip, "UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN");
     }
 
     @Test

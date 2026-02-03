@@ -33,6 +33,11 @@ public class IpInfoReader {
         log.debug("Cache MISS for IP: {}", ip);
         IpInfo fetched = ipInfoClient.getIpInfo(ip);
 
+        if (fetched == null) {
+            log.warn("IpInfoClient returned null for IP: {}", ip);
+            return IpInfo.unknown(ip);
+        }
+
         if (!fetched.isUnknown()) {
             cache.put(ip, fetched);
         }

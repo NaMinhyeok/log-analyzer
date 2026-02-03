@@ -1,16 +1,16 @@
 package io.github.naminhyeok.core.api.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import io.github.naminhyeok.core.api.controller.docs.HealthControllerDocs;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class HealthController {
+public class HealthController implements HealthControllerDocs {
 
+    @Override
     @GetMapping("/health")
-    public ResponseEntity<Object> health() {
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public Object health() {
+        return null;
     }
 
 }

@@ -1,5 +1,6 @@
 package io.github.naminhyeok.core.api.controller.v1;
 
+import io.github.naminhyeok.core.api.controller.docs.LogAnalysisControllerDocs;
 import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResponse;
 import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResultResponse;
 import io.github.naminhyeok.core.application.LogAnalysisService;
@@ -9,7 +10,6 @@ import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
 import io.github.naminhyeok.core.support.response.ApiResponse;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/v1/logs")
-public class LogAnalysisController {
+@RequestMapping("/api/logs")
+public class LogAnalysisController implements LogAnalysisControllerDocs {
 
     private final LogAnalysisService logAnalysisService;
 
@@ -29,16 +29,18 @@ public class LogAnalysisController {
         this.logAnalysisService = logAnalysisService;
     }
 
-    @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<LogAnalysisResponse>> analyze(
+    @Override
+    @PostMapping(value = "/v1/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<LogAnalysisResponse> analyze(
         @RequestPart("file") MultipartFile file
     ) {
         LogAnalysis logAnalysis = logAnalysisService.analyze(file);
-        return ResponseEntity.ok(ApiResponse.success(LogAnalysisResponse.from(logAnalysis)));
+        return ApiResponse.success(LogAnalysisResponse.from(logAnalysis));
     }
 
-    @GetMapping("/analysis/{analysisId}")
-    public ResponseEntity<ApiResponse<LogAnalysisResultResponse>> getAnalysis(
+    @Override
+    @GetMapping("/v1/analysis/{analysisId}")
+    public ApiResponse<LogAnalysisResultResponse> getAnalysis(
         @PathVariable Long analysisId,
         @RequestParam(defaultValue = "10") int topN
     ) {
@@ -46,6 +48,6 @@ public class LogAnalysisController {
             throw new CoreException(ErrorType.INVALID_REQUEST, "topN은 1 이상이어야 합니다.");
         }
         LogAnalysisResult result = logAnalysisService.getAnalysisResult(analysisId, topN);
-        return ResponseEntity.ok(ApiResponse.success(LogAnalysisResultResponse.from(result, topN)));
+        return ApiResponse.success(LogAnalysisResultResponse.from(result, topN));
     }
 }

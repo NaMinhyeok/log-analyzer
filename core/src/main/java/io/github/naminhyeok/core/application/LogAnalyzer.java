@@ -19,11 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class LogAnalyzer {
 
-    private final CsvParser csvParser;
     private final LogAnalysisAggregateRepository repository;
 
-    public LogAnalyzer(CsvParser csvParser, LogAnalysisAggregateRepository repository) {
-        this.csvParser = csvParser;
+    public LogAnalyzer(LogAnalysisAggregateRepository repository) {
         this.repository = repository;
     }
 
@@ -35,7 +33,7 @@ public class LogAnalyzer {
         AtomicInteger lineNumber = new AtomicInteger(1);
 
         try {
-            csvParser.parse(file.getInputStream(), stream ->
+            CsvParser.parse(file.getInputStream(), stream ->
                 stream.forEach(row -> processRow(row, aggregator, lineNumber))
             );
         } catch (IOException e) {

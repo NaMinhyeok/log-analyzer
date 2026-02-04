@@ -4,7 +4,7 @@ import io.github.naminhyeok.core.api.controller.docs.LogAnalysisControllerDocs;
 import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResponse;
 import io.github.naminhyeok.core.api.controller.v1.response.LogAnalysisResultResponse;
 import io.github.naminhyeok.core.application.LogAnalysisService;
-import io.github.naminhyeok.core.domain.LogAnalysis;
+import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
@@ -34,8 +34,8 @@ public class LogAnalysisController implements LogAnalysisControllerDocs {
     public ApiResponse<LogAnalysisResponse> analyze(
         @RequestPart("file") MultipartFile file
     ) {
-        LogAnalysis logAnalysis = logAnalysisService.analyze(file);
-        return ApiResponse.success(LogAnalysisResponse.from(logAnalysis));
+        LogAnalysisAggregate aggregate = logAnalysisService.analyze(file);
+        return ApiResponse.success(LogAnalysisResponse.from(aggregate));
     }
 
     @Override

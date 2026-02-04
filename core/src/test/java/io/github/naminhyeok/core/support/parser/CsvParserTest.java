@@ -1,6 +1,5 @@
 package io.github.naminhyeok.core.support.parser;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -14,13 +13,6 @@ import static org.assertj.core.api.BDDAssertions.tuple;
 
 class CsvParserTest {
 
-    private CsvParser parser;
-
-    @BeforeEach
-    void setUp() {
-        parser = new CsvParser();
-    }
-
     @Test
     void CSV를_파싱할_수_있다() {
         // given
@@ -32,7 +24,7 @@ class CsvParserTest {
 
         // when
         List<CsvRow> rows = new ArrayList<>();
-        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
+        CsvParser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(1)
@@ -50,7 +42,7 @@ class CsvParserTest {
 
         // when
         List<CsvRow> rows = new ArrayList<>();
-        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
+        CsvParser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).isEmpty();
@@ -67,7 +59,7 @@ class CsvParserTest {
 
         // when
         List<CsvRow> rows = new ArrayList<>();
-        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
+        CsvParser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(1)
@@ -88,7 +80,7 @@ class CsvParserTest {
 
         // when
         List<CsvRow> rows = new ArrayList<>();
-        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
+        CsvParser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(1);
@@ -107,7 +99,7 @@ class CsvParserTest {
 
         // when
         List<CsvRow> rows = new ArrayList<>();
-        parser.parse(inputStream, stream -> rows.addAll(stream.toList()));
+        CsvParser.parse(inputStream, stream -> rows.addAll(stream.toList()));
 
         // then
         then(rows).hasSize(3)

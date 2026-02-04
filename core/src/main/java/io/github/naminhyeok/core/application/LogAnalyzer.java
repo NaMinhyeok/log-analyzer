@@ -4,6 +4,7 @@ import io.github.naminhyeok.core.domain.AccessLog;
 import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.github.naminhyeok.core.domain.LogAnalysisAggregateRepository;
 import io.github.naminhyeok.core.domain.LogStreamAggregator;
+import io.github.naminhyeok.core.domain.RankedItem;
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
 import io.github.naminhyeok.core.support.parser.CsvParser;
@@ -13,16 +14,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Component
 public class LogAnalyzer {
 
-    private final LogAnalysisAggregateRepository repository;
+    private static final int TOP_IP_PRELOAD_COUNT = 10;
 
-    public LogAnalyzer(LogAnalysisAggregateRepository repository) {
+    private final LogAnalysisAggregateRepository repository;
+    private final PendingIpQueue pendingIpQueue;
+
+    public LogAnalyzer(LogAnalysisAggregateRepository repository, PendingIpQueue pendingIpQueue) {
         this.repository = repository;
+        this.pendingIpQueue = pendingIpQueue;
     }
 
     public LogAnalysisAggregate analyze(MultipartFile file) {
@@ -43,8 +49,19 @@ public class LogAnalyzer {
         LogAnalysisAggregate aggregate = aggregator.finish();
         LogAnalysisAggregate savedAggregate = repository.save(aggregate);
 
+        preloadTopIps(savedAggregate);
         logCompletion(savedAggregate, startTime);
         return savedAggregate;
+    }
+
+    private void preloadTopIps(LogAnalysisAggregate aggregate) {
+        List<String> topIps = aggregate.getTopClientIps(TOP_IP_PRELOAD_COUNT)
+            .stream()
+            .map(RankedItem::value)
+            .toList();
+
+        int addedCount = pendingIpQueue.offerAll(topIps);
+        log.debug("Top {} IPs queued for preload: {} added", TOP_IP_PRELOAD_COUNT, addedCount);
     }
 
     private void processRow(CsvRow row, LogStreamAggregator aggregator, AtomicInteger lineNumber) {

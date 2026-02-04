@@ -2,7 +2,6 @@ package io.github.naminhyeok.core.application;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import io.github.naminhyeok.clients.ipinfo.IpInfo;
-import io.github.naminhyeok.clients.ipinfo.IpInfoClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +15,11 @@ import java.util.stream.Collectors;
 public class IpInfoReader {
 
     private final Cache<String, IpInfo> cache;
-    private final IpInfoClient ipInfoClient;
+    private final PendingIpQueue pendingIpQueue;
 
-    public IpInfoReader(Cache<String, IpInfo> cache, IpInfoClient ipInfoClient) {
+    public IpInfoReader(Cache<String, IpInfo> cache, PendingIpQueue pendingIpQueue) {
         this.cache = cache;
-        this.ipInfoClient = ipInfoClient;
+        this.pendingIpQueue = pendingIpQueue;
     }
 
     public IpInfo read(String ip) {
@@ -30,18 +29,9 @@ public class IpInfoReader {
             return cached;
         }
 
-        log.debug("Cache MISS for IP: {}", ip);
-        IpInfo fetched = ipInfoClient.getIpInfo(ip);
-
-        if (fetched == null) {
-            log.warn("IpInfoClient returned null for IP: {}", ip);
-            return IpInfo.unknown(ip);
-        }
-
-        if (!fetched.isUnknown()) {
-            cache.put(ip, fetched);
-        }
-        return fetched;
+        log.debug("Cache MISS for IP: {}, queueing for async fetch", ip);
+        pendingIpQueue.offer(ip);
+        return IpInfo.unknown(ip);
     }
 
     public Map<String, IpInfo> readAll(List<String> ips) {

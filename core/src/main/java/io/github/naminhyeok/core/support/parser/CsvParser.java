@@ -2,7 +2,6 @@ package io.github.naminhyeok.core.support.parser;
 
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
-import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -13,17 +12,19 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-@Component
-public class CsvParser {
+public final class CsvParser {
 
-    public void parse(InputStream inputStream, Consumer<Stream<CsvRow>> consumer) {
+    private CsvParser() {
+    }
+
+    public static void parse(InputStream inputStream, Consumer<Stream<CsvRow>> consumer) {
         try (BufferedReader reader = new BufferedReader(
             new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
 
             Stream<CsvRow> stream = reader.lines()
                 .skip(1)
                 .filter(line -> !line.trim().isEmpty())
-                .map(this::parseLine);
+                .map(CsvParser::parseLine);
 
             consumer.accept(stream);
         } catch (Exception e) {
@@ -31,7 +32,7 @@ public class CsvParser {
         }
     }
 
-    private CsvRow parseLine(String line) {
+    private static CsvRow parseLine(String line) {
         List<String> fields = new ArrayList<>();
         StringBuilder currentField = new StringBuilder();
         boolean inQuotes = false;

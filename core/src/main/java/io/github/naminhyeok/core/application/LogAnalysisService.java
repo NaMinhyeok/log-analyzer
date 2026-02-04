@@ -1,6 +1,6 @@
 package io.github.naminhyeok.core.application;
 
-import io.github.naminhyeok.core.domain.LogAnalysis;
+import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,16 +22,16 @@ public class LogAnalysisService {
         this.logAnalysisEnricher = logAnalysisEnricher;
     }
 
-    public LogAnalysis analyze(MultipartFile file) {
+    public LogAnalysisAggregate analyze(MultipartFile file) {
         return logAnalyzer.analyze(file);
     }
 
-    public LogAnalysis getAnalysis(Long analysisId) {
-        return logAnalysisFinder.findById(analysisId);
+    public LogAnalysisAggregate getAnalysis(Long analysisId) {
+        return logAnalysisFinder.find(analysisId);
     }
 
     public LogAnalysisResult getAnalysisResult(Long analysisId, int topN) {
-        LogAnalysis logAnalysis = logAnalysisFinder.findById(analysisId);
-        return logAnalysisEnricher.enrich(logAnalysis, topN);
+        LogAnalysisAggregate aggregate = logAnalysisFinder.find(analysisId);
+        return logAnalysisEnricher.enrich(aggregate, topN);
     }
 }

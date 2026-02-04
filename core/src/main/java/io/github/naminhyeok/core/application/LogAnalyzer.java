@@ -24,9 +24,9 @@ public class LogAnalyzer {
     private static final int TOP_IP_PRELOAD_COUNT = 10;
 
     private final LogAnalysisAggregateRepository repository;
-    private final PendingIpQueue pendingIpQueue;
+    private final PendingQueue<String> pendingIpQueue;
 
-    public LogAnalyzer(LogAnalysisAggregateRepository repository, PendingIpQueue pendingIpQueue) {
+    public LogAnalyzer(LogAnalysisAggregateRepository repository, PendingQueue<String> pendingIpQueue) {
         this.repository = repository;
         this.pendingIpQueue = pendingIpQueue;
     }

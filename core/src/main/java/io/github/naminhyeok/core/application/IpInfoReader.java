@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 public class IpInfoReader {
 
     private final Cache<String, IpInfo> cache;
-    private final PendingIpQueue pendingIpQueue;
+    private final PendingQueue<String> pendingIpQueue;
 
-    public IpInfoReader(Cache<String, IpInfo> cache, PendingIpQueue pendingIpQueue) {
+    public IpInfoReader(Cache<String, IpInfo> cache, PendingQueue<String> pendingIpQueue) {
         this.cache = cache;
         this.pendingIpQueue = pendingIpQueue;
     }

@@ -13,14 +13,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class IpInfoWorker {
 
-    private final PendingIpQueue pendingIpQueue;
+    private final PendingQueue<String> pendingIpQueue;
     private final IpInfoClient ipInfoClient;
     private final Cache<String, IpInfo> cache;
     private volatile boolean running = true;
     private Thread workerThread;
 
     public IpInfoWorker(
-        PendingIpQueue pendingIpQueue,
+        PendingQueue<String> pendingIpQueue,
         IpInfoClient ipInfoClient,
         Cache<String, IpInfo> cache
     ) {
@@ -31,10 +31,10 @@ public class IpInfoWorker {
 
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        workerThread = new Thread(this::processQueue, "ip-info-worker");
-        workerThread.setDaemon(true);
-        workerThread.start();
-        log.info("IpInfoWorker started");
+        workerThread = Thread.ofVirtual()
+            .name("ip-info-worker")
+            .start(this::processQueue);
+        log.info("IpInfoWorker started (virtual thread)");
     }
 
     private void processQueue() {
@@ -85,7 +85,4 @@ public class IpInfoWorker {
         log.info("IpInfoWorker stopped");
     }
 
-    boolean isRunning() {
-        return running && workerThread != null && workerThread.isAlive();
-    }
 }

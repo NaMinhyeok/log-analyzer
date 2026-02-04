@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 @Component
-public class PendingIpQueue {
+public class PendingIpQueue implements PendingQueue<String> {
 
     private final Set<String> pendingSet = ConcurrentHashMap.newKeySet();
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();

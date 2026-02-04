@@ -10,7 +10,6 @@ import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.infrastructure.persistence.InMemoryLogAnalysisAggregateRepository;
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
-import io.github.naminhyeok.core.support.parser.CsvParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -29,14 +28,13 @@ class LogAnalysisServiceTest {
     @BeforeEach
     void setUp() {
         LogAnalysisAggregateRepository repository = new InMemoryLogAnalysisAggregateRepository();
-        CsvParser csvParser = new CsvParser();
         IpInfoClient stubIpInfoClient = ip -> IpInfo.unknown(ip);
         Cache<String, IpInfo> cache = Caffeine.newBuilder()
             .maximumSize(100)
             .expireAfterWrite(Duration.ofMinutes(10))
             .build();
 
-        LogAnalyzer logAnalyzer = new LogAnalyzer(csvParser, repository);
+        LogAnalyzer logAnalyzer = new LogAnalyzer(repository);
         LogAnalysisFinder logAnalysisFinder = new LogAnalysisFinder(repository);
         IpInfoReader ipInfoReader = new IpInfoReader(cache, stubIpInfoClient);
         LogAnalysisEnricher logAnalysisEnricher = new LogAnalysisEnricher(ipInfoReader);

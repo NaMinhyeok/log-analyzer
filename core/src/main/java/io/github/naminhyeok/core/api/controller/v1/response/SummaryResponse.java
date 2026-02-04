@@ -1,6 +1,6 @@
 package io.github.naminhyeok.core.api.controller.v1.response;
 
-import io.github.naminhyeok.core.domain.LogAnalysisStatistics;
+import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "분석 요약 정보")
@@ -11,10 +11,10 @@ public record SummaryResponse(
     StatusDistributionResponse statusCodeDistribution
 ) {
 
-    public static SummaryResponse from(LogAnalysisStatistics statistics) {
+    public static SummaryResponse from(LogAnalysisAggregate aggregate) {
         return new SummaryResponse(
-            statistics.totalRequests(),
-            StatusDistributionResponse.from(statistics.statusCodeDistribution())
+            aggregate.getTotalRequests(),
+            StatusDistributionResponse.from(aggregate.getStatusCodeDistribution())
         );
     }
 }

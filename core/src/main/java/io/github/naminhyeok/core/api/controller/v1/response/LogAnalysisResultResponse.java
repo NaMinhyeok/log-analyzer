@@ -1,8 +1,7 @@
 package io.github.naminhyeok.core.api.controller.v1.response;
 
-import io.github.naminhyeok.core.domain.LogAnalysis;
+import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
-import io.github.naminhyeok.core.domain.LogAnalysisStatistics;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -28,30 +27,22 @@ public record LogAnalysisResultResponse(
     List<ParseErrorResponse> parseErrorSamples
 ) {
 
-    private static final int MAX_ERROR_SAMPLES = 10;
-
     public static LogAnalysisResultResponse from(LogAnalysisResult result, int topN) {
-        LogAnalysis analysis = result.logAnalysis();
-        LogAnalysisStatistics statistics = analysis.calculateStatistics(topN);
+        LogAnalysisAggregate aggregate = result.aggregate();
 
-        List<RankedIpResponse> topClientIpsWithDetail = statistics.topClientIps().stream()
+        List<RankedIpResponse> topClientIpsWithDetail = aggregate.getTopClientIps(topN).stream()
             .map(rankedItem -> RankedIpResponse.from(rankedItem, result.getIpInfo(rankedItem.value())))
             .toList();
 
-        List<ParseErrorResponse> errorSamples = analysis.getErrors().stream()
-            .limit(MAX_ERROR_SAMPLES)
-            .map(ParseErrorResponse::from)
-            .toList();
-
         return new LogAnalysisResultResponse(
-            analysis.getId(),
-            analysis.getAnalyzedAt(),
-            SummaryResponse.from(statistics),
-            statistics.topPaths().stream().map(RankedItemResponse::from).toList(),
-            statistics.topStatusCodes().stream().map(RankedItemResponse::from).toList(),
+            aggregate.getId(),
+            aggregate.getAnalyzedAt(),
+            SummaryResponse.from(aggregate),
+            aggregate.getTopPaths(topN).stream().map(RankedItemResponse::from).toList(),
+            aggregate.getTopStatusCodes(topN).stream().map(RankedItemResponse::from).toList(),
             topClientIpsWithDetail,
-            analysis.getErrors().size(),
-            errorSamples
+            aggregate.getParseErrorCount(),
+            aggregate.getParseErrorSamples().stream().map(ParseErrorResponse::from).toList()
         );
     }
 }

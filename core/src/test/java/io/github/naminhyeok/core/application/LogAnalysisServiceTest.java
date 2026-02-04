@@ -4,18 +4,15 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.naminhyeok.clients.ipinfo.IpInfo;
 import io.github.naminhyeok.clients.ipinfo.IpInfoClient;
-import io.github.naminhyeok.core.domain.AccessLog;
-import io.github.naminhyeok.core.domain.LogAnalysis;
-import io.github.naminhyeok.core.domain.LogAnalysisRepository;
+import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
+import io.github.naminhyeok.core.domain.LogAnalysisAggregateRepository;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
-import io.github.naminhyeok.core.infrastructure.persistence.InMemoryLogAnalysisRepository;
+import io.github.naminhyeok.core.infrastructure.persistence.InMemoryLogAnalysisAggregateRepository;
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
 import io.github.naminhyeok.core.support.parser.CsvParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,7 +28,7 @@ class LogAnalysisServiceTest {
 
     @BeforeEach
     void setUp() {
-        LogAnalysisRepository repository = new InMemoryLogAnalysisRepository();
+        LogAnalysisAggregateRepository repository = new InMemoryLogAnalysisAggregateRepository();
         CsvParser csvParser = new CsvParser();
         IpInfoClient stubIpInfoClient = ip -> IpInfo.unknown(ip);
         Cache<String, IpInfo> cache = Caffeine.newBuilder()
@@ -48,7 +45,7 @@ class LogAnalysisServiceTest {
     }
 
     @Test
-    void 정상적인_CSV를_파싱하면_AccessLog_목록을_반환한다() {
+    void 정상적인_CSV를_파싱하면_집계된_결과를_반환한다() {
         // given
         String csv = """
             header1,header2,header3,header4,header5,header6,header7,header8,header9,header10,header11,header12
@@ -57,24 +54,19 @@ class LogAnalysisServiceTest {
         MultipartFile file = toMultipartFile(csv);
 
         // when
-        LogAnalysis result = service.analyze(file);
+        LogAnalysisAggregate result = service.analyze(file);
 
         // then
         then(result.getId()).isNotNull();
-        then(result.getAccessLogs()).hasSize(1);
-        then(result.getErrors()).isEmpty();
-        then(result.getAccessLogs())
+        then(result.getTotalRequests()).isEqualTo(1);
+        then(result.getParseErrorCount()).isZero();
+        then(result.getTopClientIps(10))
+            .hasSize(1)
             .first()
-            .extracting(
-                AccessLog::clientIp,
-                AccessLog::httpMethod,
-                AccessLog::httpStatus
-            )
-            .containsExactly(
-                "121.158.115.86",
-                HttpMethod.GET,
-                HttpStatusCode.valueOf(200)
-            );
+            .satisfies(rankedItem -> {
+                then(rankedItem.value()).isEqualTo("121.158.115.86");
+                then(rankedItem.count()).isEqualTo(1);
+            });
     }
 
     @Test
@@ -89,12 +81,12 @@ class LogAnalysisServiceTest {
         MultipartFile file = toMultipartFile(csv);
 
         // when
-        LogAnalysis result = service.analyze(file);
+        LogAnalysisAggregate result = service.analyze(file);
 
         // then
         then(result.getId()).isNotNull();
-        then(result.getAccessLogs()).hasSize(2);
-        then(result.getErrors()).hasSize(1);
+        then(result.getTotalRequests()).isEqualTo(2);
+        then(result.getParseErrorCount()).isEqualTo(1);
     }
 
     @Test
@@ -104,12 +96,12 @@ class LogAnalysisServiceTest {
         MultipartFile file = toMultipartFile(csv);
 
         // when
-        LogAnalysis result = service.analyze(file);
+        LogAnalysisAggregate result = service.analyze(file);
 
         // then
         then(result.getId()).isNotNull();
-        then(result.getAccessLogs()).isEmpty();
-        then(result.getErrors()).isEmpty();
+        then(result.getTotalRequests()).isZero();
+        then(result.getParseErrorCount()).isZero();
     }
 
     @Test
@@ -119,12 +111,12 @@ class LogAnalysisServiceTest {
         MultipartFile file = toMultipartFile(csv);
 
         // when
-        LogAnalysis result = service.analyze(file);
+        LogAnalysisAggregate result = service.analyze(file);
 
         // then
         then(result.getId()).isNotNull();
-        then(result.getAccessLogs()).isEmpty();
-        then(result.getErrors()).isEmpty();
+        then(result.getTotalRequests()).isZero();
+        then(result.getParseErrorCount()).isZero();
     }
 
     @Test
@@ -135,14 +127,14 @@ class LogAnalysisServiceTest {
             "1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/api/test,Mozilla/5.0,200,HTTP/1.1,100,200,50,TLSv1.2,/api/test
             """;
         MultipartFile file = toMultipartFile(csv);
-        LogAnalysis savedLogAnalysis = service.analyze(file);
+        LogAnalysisAggregate savedAggregate = service.analyze(file);
 
         // when
-        LogAnalysis foundLogAnalysis = service.getAnalysis(savedLogAnalysis.getId());
+        LogAnalysisAggregate foundAggregate = service.getAnalysis(savedAggregate.getId());
 
         // then
-        then(foundLogAnalysis.getId()).isEqualTo(savedLogAnalysis.getId());
-        then(foundLogAnalysis.getAccessLogs()).hasSize(1);
+        then(foundAggregate.getId()).isEqualTo(savedAggregate.getId());
+        then(foundAggregate.getTotalRequests()).isEqualTo(1);
     }
 
     @Test
@@ -167,13 +159,13 @@ class LogAnalysisServiceTest {
             "1/29/2026, 5:44:10.000 AM",121.158.115.86,GET,/api/test,Mozilla/5.0,200,HTTP/1.1,100,200,50,TLSv1.2,/api/test
             """;
         MultipartFile file = toMultipartFile(csv);
-        LogAnalysis savedLogAnalysis = service.analyze(file);
+        LogAnalysisAggregate savedAggregate = service.analyze(file);
 
         // when
-        LogAnalysisResult result = service.getAnalysisResult(savedLogAnalysis.getId(), 10);
+        LogAnalysisResult result = service.getAnalysisResult(savedAggregate.getId(), 10);
 
         // then
-        then(result.logAnalysis().getId()).isEqualTo(savedLogAnalysis.getId());
+        then(result.aggregate().getId()).isEqualTo(savedAggregate.getId());
         then(result.enrichedIps()).isNotNull();
     }
 

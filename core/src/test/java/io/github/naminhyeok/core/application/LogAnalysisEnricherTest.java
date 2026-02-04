@@ -7,7 +7,7 @@ import io.github.naminhyeok.core.domain.AccessLog;
 import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.domain.LogStreamAggregator;
-import io.github.naminhyeok.core.support.fake.FakeIpInfoClient;
+import io.github.naminhyeok.core.support.fake.FakePendingIpQueue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -20,26 +20,25 @@ import static org.assertj.core.api.BDDAssertions.then;
 
 class LogAnalysisEnricherTest {
 
-    private FakeIpInfoClient fakeIpInfoClient;
+    private Cache<String, IpInfo> cache;
     private LogAnalysisEnricher logAnalysisEnricher;
 
     @BeforeEach
     void setUp() {
-        fakeIpInfoClient = new FakeIpInfoClient();
-        Cache<String, IpInfo> cache = Caffeine.newBuilder()
+        FakePendingIpQueue fakePendingIpQueue = new FakePendingIpQueue();
+        cache = Caffeine.newBuilder()
             .maximumSize(100)
             .expireAfterWrite(Duration.ofMinutes(10))
             .build();
-        IpInfoReader ipInfoReader = new IpInfoReader(cache, fakeIpInfoClient);
+        IpInfoReader ipInfoReader = new IpInfoReader(cache, fakePendingIpQueue);
         logAnalysisEnricher = new LogAnalysisEnricher(ipInfoReader);
     }
 
     @Test
     void LogAnalysisAggregate에_IP_정보를_병합하여_LogAnalysisResult를_생성한다() {
-        // given
-        fakeIpInfoClient
-            .withIpInfo("8.8.8.8", "US", "California", "Mountain View", "Google LLC")
-            .withIpInfo("1.1.1.1", "AU", "New South Wales", "Sydney", "Cloudflare");
+        // given - 캐시에 IP 정보 미리 적재 (비동기 워커가 처리한 것처럼)
+        cache.put("8.8.8.8", new IpInfo("8.8.8.8", "US", "California", "Mountain View", "Google LLC"));
+        cache.put("1.1.1.1", new IpInfo("1.1.1.1", "AU", "New South Wales", "Sydney", "Cloudflare"));
 
         LogAnalysisAggregate aggregate = createAggregateWithIps("8.8.8.8", "8.8.8.8", "1.1.1.1");
 
@@ -53,8 +52,8 @@ class LogAnalysisEnricherTest {
     }
 
     @Test
-    void 존재하지_않는_IP는_unknown_정보를_반환한다() {
-        // given
+    void 캐시에_없는_IP는_unknown_정보를_반환한다() {
+        // given - 캐시에 IP 정보 없음
         LogAnalysisAggregate aggregate = createAggregateWithIps("192.168.0.1");
 
         // when

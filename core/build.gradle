@@ -12,6 +12,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-resttestclient'
+    testImplementation 'org.awaitility:awaitility:4.2.2'
 }
 
 bootJar {

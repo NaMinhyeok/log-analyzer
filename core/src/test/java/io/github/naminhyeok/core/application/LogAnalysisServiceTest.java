@@ -3,13 +3,13 @@ package io.github.naminhyeok.core.application;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.naminhyeok.clients.ipinfo.IpInfo;
-import io.github.naminhyeok.clients.ipinfo.IpInfoClient;
 import io.github.naminhyeok.core.domain.LogAnalysisAggregate;
 import io.github.naminhyeok.core.domain.LogAnalysisAggregateRepository;
 import io.github.naminhyeok.core.domain.LogAnalysisResult;
 import io.github.naminhyeok.core.infrastructure.persistence.InMemoryLogAnalysisAggregateRepository;
 import io.github.naminhyeok.core.support.error.CoreException;
 import io.github.naminhyeok.core.support.error.ErrorType;
+import io.github.naminhyeok.core.support.fake.FakePendingIpQueue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -28,15 +28,15 @@ class LogAnalysisServiceTest {
     @BeforeEach
     void setUp() {
         LogAnalysisAggregateRepository repository = new InMemoryLogAnalysisAggregateRepository();
-        IpInfoClient stubIpInfoClient = ip -> IpInfo.unknown(ip);
+        FakePendingIpQueue fakePendingIpQueue = new FakePendingIpQueue();
         Cache<String, IpInfo> cache = Caffeine.newBuilder()
             .maximumSize(100)
             .expireAfterWrite(Duration.ofMinutes(10))
             .build();
 
-        LogAnalyzer logAnalyzer = new LogAnalyzer(repository);
+        LogAnalyzer logAnalyzer = new LogAnalyzer(repository, fakePendingIpQueue);
         LogAnalysisFinder logAnalysisFinder = new LogAnalysisFinder(repository);
-        IpInfoReader ipInfoReader = new IpInfoReader(cache, stubIpInfoClient);
+        IpInfoReader ipInfoReader = new IpInfoReader(cache, fakePendingIpQueue);
         LogAnalysisEnricher logAnalysisEnricher = new LogAnalysisEnricher(ipInfoReader);
 
         service = new LogAnalysisService(logAnalyzer, logAnalysisFinder, logAnalysisEnricher);
